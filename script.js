@@ -1,28 +1,20 @@
-const form = document.getElementById("postulacionForm");
-const estado = document.getElementById("estado");
-const toggleBtn = document.getElementById("togglePostulaciones");
-const resetBtn = document.getElementById("resetPostulaciones");
-const estadoPostulaciones = document.getElementById("estadoPostulaciones");
+// ⚠️ Aquí pega tu webhook de Discord (usa discord.com)
+const WEBHOOK_URL = "https://discord.com/api/webhooks/1414057629826810007/ymOwrWSZwKGtYvmHcgURta1JGjkV6MlNgylik2NLjA1SDN1pWr8h2EKGSD7qzRgxNmKn";
 
-// ❌ Aquí va tu webhook directo (inseguro)
-const WEBHOOK_URL = "https://discord.com/api/webhooks/TU_WEBHOOK";
+let postulacionesAbiertas = true;
+let yaPostulado = false;
 
-let abiertas = localStorage.getItem("postulacionesAbiertas") !== "false";
-let yaPostulo = localStorage.getItem("postulacionEnviada");
-
-form.style.display = abiertas && !yaPostulo ? "block" : "none";
-estadoPostulaciones.textContent = abiertas ? "✅ Postulaciones abiertas" : "❌ Postulaciones cerradas";
-toggleBtn.textContent = abiertas ? "Cerrar Postulaciones" : "Abrir Postulaciones";
-
-if (yaPostulo) {
-  form.style.display = "none";
-  estado.textContent = "Ya enviaste tu postulación.";
-}
-
-form.addEventListener("submit", async (e) => {
+document.getElementById("postulacionForm").addEventListener("submit", async (e) => {
   e.preventDefault();
-  if (!abiertas) {
-    estado.textContent = "❌ Las postulaciones están cerradas.";
+  const estado = document.getElementById("estado");
+
+  if (!postulacionesAbiertas) {
+    estado.textContent = "🚫 Las postulaciones están cerradas.";
+    return;
+  }
+
+  if (yaPostulado) {
+    estado.textContent = "⚠️ Ya enviaste una postulación.";
     return;
   }
 
@@ -30,51 +22,52 @@ form.addEventListener("submit", async (e) => {
   const edad = document.getElementById("edad").value;
   const motivo = document.getElementById("motivo").value;
 
+  const payload = {
+    embeds: [
+      {
+        title: "📋 Nueva Postulación",
+        color: 0xe63946,
+        fields: [
+          { name: "👤 Usuario", value: usuario, inline: true },
+          { name: "🎂 Edad", value: edad, inline: true },
+          { name: "📝 Motivo", value: motivo }
+        ],
+        footer: { text: "Servidor Minecraft" },
+        timestamp: new Date()
+      }
+    ]
+  };
+
   try {
     const response = await fetch(WEBHOOK_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        embeds: [
-          {
-            title: "📋 Nueva Postulación",
-            color: 0xe63946,
-            fields: [
-              { name: "👤 Usuario", value: usuario, inline: true },
-              { name: "🎂 Edad", value: edad.toString(), inline: true },
-              { name: "📝 Motivo", value: motivo }
-            ],
-            footer: { text: "Servidor Minecraft" },
-            timestamp: new Date()
-          }
-        ]
-      })
+      body: JSON.stringify(payload)
     });
 
-    if (!response.ok) throw new Error("Error en servidor");
-
-    localStorage.setItem("postulacionEnviada", "true");
-    form.style.display = "none";
-    estado.textContent = "✅ Postulación enviada correctamente.";
+    if (response.ok) {
+      estado.textContent = "✅ Postulación enviada con éxito.";
+      yaPostulado = true;
+    } else {
+      estado.textContent = "❌ Error al enviar.";
+    }
   } catch (error) {
-    estado.textContent = "❌ Error al enviar.";
-    console.error(error);
+    estado.textContent = "❌ Error de conexión.";
   }
 });
 
-toggleBtn.addEventListener("click", () => {
-  abiertas = !abiertas;
-  localStorage.setItem("postulacionesAbiertas", abiertas);
-  form.style.display = abiertas && !yaPostulo ? "block" : "none";
-  estadoPostulaciones.textContent = abiertas ? "✅ Postulaciones abiertas" : "❌ Postulaciones cerradas";
-  toggleBtn.textContent = abiertas ? "Cerrar Postulaciones" : "Abrir Postulaciones";
+// Panel admin
+document.getElementById("togglePostulaciones").addEventListener("click", () => {
+  postulacionesAbiertas = !postulacionesAbiertas;
+  document.getElementById("estadoPostulaciones").textContent = postulacionesAbiertas
+    ? "✅ Postulaciones abiertas"
+    : "🚫 Postulaciones cerradas";
+  document.getElementById("togglePostulaciones").textContent = postulacionesAbiertas
+    ? "Cerrar Postulaciones"
+    : "Abrir Postulaciones";
 });
 
-resetBtn.addEventListener("click", () => {
-  localStorage.removeItem("postulacionEnviada");
-  yaPostulo = false;
-  if (abiertas) {
-    form.style.display = "block";
-    estado.textContent = "📢 Puedes volver a enviar una postulación.";
-  }
+document.getElementById("resetPostulaciones").addEventListener("click", () => {
+  yaPostulado = false;
+  document.getElementById("estado").textContent = "🔄 Postulaciones reiniciadas, puedes enviar de nuevo.";
 });
