@@ -1,8 +1,15 @@
-// ⚠️ Aquí pega tu webhook de Discord (usa discord.com)
+// ⚠️ Tu webhook de Discord (usa discord.com)
 const WEBHOOK_URL = "https://discord.com/api/webhooks/1414057629826810007/ymOwrWSZwKGtYvmHcgURta1JGjkV6MlNgylik2NLjA1SDN1pWr8h2EKGSD7qzRgxNmKn";
 
 let postulacionesAbiertas = true;
-let yaPostulado = false;
+
+// Revisar si ya postuló en el navegador
+let yaPostulado = localStorage.getItem("yaPostulado") === "true";
+
+// Actualizar estado inicial
+if (yaPostulado) {
+  document.getElementById("estado").textContent = "⚠️ Ya enviaste una postulación.";
+}
 
 document.getElementById("postulacionForm").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -48,6 +55,7 @@ document.getElementById("postulacionForm").addEventListener("submit", async (e) 
     if (response.ok) {
       estado.textContent = "✅ Postulación enviada con éxito.";
       yaPostulado = true;
+      localStorage.setItem("yaPostulado", "true"); // Guardar en navegador
     } else {
       estado.textContent = "❌ Error al enviar.";
     }
@@ -69,5 +77,6 @@ document.getElementById("togglePostulaciones").addEventListener("click", () => {
 
 document.getElementById("resetPostulaciones").addEventListener("click", () => {
   yaPostulado = false;
+  localStorage.removeItem("yaPostulado"); // Permitir de nuevo
   document.getElementById("estado").textContent = "🔄 Postulaciones reiniciadas, puedes enviar de nuevo.";
 });
