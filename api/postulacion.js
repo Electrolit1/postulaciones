@@ -4,12 +4,11 @@ export default async function handler(req, res) {
   }
 
   const { usuario, edad, motivo } = req.body;
-
-  if (!usuario || !edad || !motivo) {
-    return res.status(400).json({ error: "Faltan campos" });
-  }
-
   const webhookUrl = process.env.DISCORD_WEBHOOK;
+
+  if (!webhookUrl) {
+    return res.status(500).json({ error: "Webhook no configurado en Vercel" });
+  }
 
   const payload = {
     embeds: [
@@ -35,11 +34,14 @@ export default async function handler(req, res) {
     });
 
     if (!response.ok) {
-      throw new Error("Error enviando a Discord");
+      const text = await response.text();
+      console.error("Error Discord:", text);
+      return res.status(500).json({ error: "Discord respondió con error", detalle: text });
     }
 
     res.status(200).json({ ok: true });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Excepción:", error);
+    res.status(500).json({ error: "Excepción en servidor", detalle: error.message });
   }
 }
