@@ -1,12 +1,11 @@
 const form = document.getElementById("postulacionForm");
 const estado = document.getElementById("estado");
 const toggleBtn = document.getElementById("togglePostulaciones");
+const resetBtn = document.getElementById("resetPostulaciones");
 const estadoPostulaciones = document.getElementById("estadoPostulaciones");
 
-// ⚠️ Pega tu webhook aquí (nunca lo publiques en foros)
+// ⚠️ Webhook y rol
 const WEBHOOK_URL = "https://discord.com/api/webhooks/TU_WEBHOOK";
-
-// ⚠️ Pega aquí el ID del rol a mencionar (ej: Staff)
 const ROLE_ID = "123456789012345678";
 
 // Estado de postulaciones
@@ -16,7 +15,7 @@ let abiertas = localStorage.getItem("postulacionesAbiertas") !== "false";
 let yaPostulo = localStorage.getItem("postulacionEnviada");
 
 // Mostrar estado inicial
-form.style.display = abiertas ? "block" : "none";
+form.style.display = abiertas && !yaPostulo ? "block" : "none";
 estadoPostulaciones.textContent = abiertas ? "✅ Postulaciones abiertas" : "❌ Postulaciones cerradas";
 toggleBtn.textContent = abiertas ? "Cerrar Postulaciones" : "Abrir Postulaciones";
 
@@ -38,7 +37,7 @@ form.addEventListener("submit", async (e) => {
   const motivo = document.getElementById("motivo").value;
 
   const payload = {
-    content: `<@&${ROLE_ID}>`, // Menciona al rol
+    content: `<@&${ROLE_ID}>`,
     embeds: [
       {
         title: "📋 Nueva Postulación",
@@ -69,7 +68,7 @@ form.addEventListener("submit", async (e) => {
   }
 });
 
-// Abrir/cerrar postulaciones (admin)
+// Abrir/cerrar postulaciones
 toggleBtn.addEventListener("click", () => {
   abiertas = !abiertas;
   localStorage.setItem("postulacionesAbiertas", abiertas);
@@ -77,4 +76,17 @@ toggleBtn.addEventListener("click", () => {
   form.style.display = abiertas && !yaPostulo ? "block" : "none";
   estadoPostulaciones.textContent = abiertas ? "✅ Postulaciones abiertas" : "❌ Postulaciones cerradas";
   toggleBtn.textContent = abiertas ? "Cerrar Postulaciones" : "Abrir Postulaciones";
+});
+
+// Reiniciar postulaciones (permite volver a enviar)
+resetBtn.addEventListener("click", () => {
+  localStorage.removeItem("postulacionEnviada");
+  yaPostulo = false;
+
+  if (abiertas) {
+    form.style.display = "block";
+    estado.textContent = "📢 Se han reiniciado las postulaciones, puedes volver a enviar.";
+  } else {
+    estado.textContent = "⚠️ Postulaciones reiniciadas, pero están cerradas.";
+  }
 });
