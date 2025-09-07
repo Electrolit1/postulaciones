@@ -4,8 +4,8 @@ const toggleBtn = document.getElementById("togglePostulaciones");
 const resetBtn = document.getElementById("resetPostulaciones");
 const estadoPostulaciones = document.getElementById("estadoPostulaciones");
 
-// URL de tu API en Vercel
-const BACKEND_URL = "/api/postulacion";
+// ❌ Aquí va tu webhook directo (inseguro)
+const WEBHOOK_URL = "https://discord.com/api/webhooks/TU_WEBHOOK";
 
 let abiertas = localStorage.getItem("postulacionesAbiertas") !== "false";
 let yaPostulo = localStorage.getItem("postulacionEnviada");
@@ -31,10 +31,24 @@ form.addEventListener("submit", async (e) => {
   const motivo = document.getElementById("motivo").value;
 
   try {
-    const response = await fetch(BACKEND_URL, {
+    const response = await fetch(WEBHOOK_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ usuario, edad, motivo })
+      body: JSON.stringify({
+        embeds: [
+          {
+            title: "📋 Nueva Postulación",
+            color: 0xe63946,
+            fields: [
+              { name: "👤 Usuario", value: usuario, inline: true },
+              { name: "🎂 Edad", value: edad.toString(), inline: true },
+              { name: "📝 Motivo", value: motivo }
+            ],
+            footer: { text: "Servidor Minecraft" },
+            timestamp: new Date()
+          }
+        ]
+      })
     });
 
     if (!response.ok) throw new Error("Error en servidor");
