@@ -3,7 +3,13 @@ const estado = document.getElementById("estado");
 const toggleBtn = document.getElementById("togglePostulaciones");
 const estadoPostulaciones = document.getElementById("estadoPostulaciones");
 
-// Estado de postulaciones (true = abiertas)
+// ⚠️ Pega tu webhook aquí (nunca lo publiques en foros)
+const WEBHOOK_URL = "https://discord.com/api/webhooks/TU_WEBHOOK";
+
+// ⚠️ Pega aquí el ID del rol a mencionar (ej: Staff)
+const ROLE_ID = "123456789012345678";
+
+// Estado de postulaciones
 let abiertas = localStorage.getItem("postulacionesAbiertas") !== "false";
 
 // Bloquear si ya postuló
@@ -20,18 +26,47 @@ if (yaPostulo) {
 }
 
 // Enviar formulario
-form.addEventListener("submit", (e) => {
+form.addEventListener("submit", async (e) => {
   e.preventDefault();
-
   if (!abiertas) {
     estado.textContent = "❌ Las postulaciones están cerradas.";
     return;
   }
 
-  // Guardar en localStorage (solo demostración)
-  localStorage.setItem("postulacionEnviada", "true");
-  form.style.display = "none";
-  estado.textContent = "✅ Postulación enviada. Gracias!";
+  const usuario = document.getElementById("usuario").value;
+  const edad = document.getElementById("edad").value;
+  const motivo = document.getElementById("motivo").value;
+
+  const payload = {
+    content: `<@&${ROLE_ID}>`, // Menciona al rol
+    embeds: [
+      {
+        title: "📋 Nueva Postulación",
+        color: 0xE63946,
+        fields: [
+          { name: "👤 Usuario", value: usuario, inline: true },
+          { name: "🎂 Edad", value: edad, inline: true },
+          { name: "📝 Motivo", value: motivo }
+        ],
+        footer: { text: "Servidor Minecraft" },
+        timestamp: new Date()
+      }
+    ]
+  };
+
+  try {
+    await fetch(WEBHOOK_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    localStorage.setItem("postulacionEnviada", "true");
+    form.style.display = "none";
+    estado.textContent = "✅ Postulación enviada correctamente.";
+  } catch (error) {
+    estado.textContent = "❌ Error al enviar la postulación.";
+    console.error("Error:", error);
+  }
 });
 
 // Abrir/cerrar postulaciones (admin)
